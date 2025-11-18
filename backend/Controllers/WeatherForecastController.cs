@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using backend.Services;
 
 namespace backend.Controllers
 {
@@ -12,10 +13,12 @@ namespace backend.Controllers
         };
 
         private readonly ILogger<WeatherForecastController> _logger;
+        private readonly MongoDbService _mongoDb;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        public WeatherForecastController(ILogger<WeatherForecastController> logger, MongoDbService mongoDb)
         {
             _logger = logger;
+            _mongoDb = mongoDb;
         }
 
         [HttpGet(Name = "GetWeatherForecast")]
@@ -28,6 +31,23 @@ namespace backend.Controllers
                 Summary = Summaries[Random.Shared.Next(Summaries.Length)]
             })
             .ToArray();
+        }
+
+        [HttpPost("seed")]
+        public async Task<IActionResult> SeedData()
+        {
+            var collection = _mongoDb.GetCollection<WeatherForecast>("weather_forecasts");
+
+            var forecasts = Enumerable.Range(1, 10).Select(index => new WeatherForecast
+            {
+                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+                TemperatureC = Random.Shared.Next(-20, 55),
+                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+            }).ToList();
+
+            await collection.InsertManyAsync(forecasts);
+
+            return Ok(new { message = $"Dodano {forecasts.Count} rekordów do bazy danych", data = forecasts });
         }
     }
 }
