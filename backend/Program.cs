@@ -1,29 +1,35 @@
 using backend.Models;
 using backend.Services;
 
-var builder = WebApplication.CreateBuilder(args);
-
 // Add services to the container.
+
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddCors(options => {
+    options.AddDefaultPolicy(
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });     
+});
 
 // Configure MongoDB
 builder.Services.Configure<MongoDbSettings>(
     builder.Configuration.GetSection("MongoDb"));
 builder.Services.AddSingleton<MongoDbService>();
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// Configure MQTT
+builder.Services.Configure<MqttSettings>(
+    builder.Configuration.GetSection("Mqtt"));
+builder.Services.AddHostedService<MqttService>();
 
 var app = builder.Build();
+app.UseCors();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+var api = app.MapGroup("/api");
 
-app.UseAuthorization();
-
-app.MapControllers();
+//builder.Services.AddControllers();
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 
 app.Run();

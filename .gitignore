@@ -56,3 +56,5 @@ nunit-*.xml
 .vs
 
 simulator/sensors/__pycache__/
+
+simulator/venv/
