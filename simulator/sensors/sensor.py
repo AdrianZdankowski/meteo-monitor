@@ -12,10 +12,8 @@ class Sensor(ABC):
             sensor_id: Unique sensor identifier
         """
         self.sensor_id = sensor_id
-        # fixed interval is removed; use randomized interval between 0.5 and 1.5s
         self.interval = None
         self.last_read_time = 0
-        # schedule next interval
         self._next_interval = self._random_interval()
 
     def _random_interval(self) -> float:
@@ -36,7 +34,6 @@ class Sensor(ABC):
         current_time = time.time()
         if current_time - self.last_read_time >= self._next_interval:
             self.last_read_time = current_time
-            # compute next interval
             self._next_interval = self.interval or self._random_interval()
             return True
         return False
