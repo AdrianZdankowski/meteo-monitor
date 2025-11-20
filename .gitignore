@@ -54,3 +54,5 @@ TestResult.xml
 nunit-*.xml
 
 .vs
+
+simulator/sensors/__pycache__/
