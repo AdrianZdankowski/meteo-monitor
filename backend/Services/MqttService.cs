@@ -10,21 +10,27 @@ using MongoDB.Driver;
 
 namespace backend.Services;
 
+using backend.Hubs;
+using Microsoft.AspNetCore.SignalR;
+
 public class MqttService : IHostedService, IDisposable
 {
     private readonly ILogger<MqttService> _logger;
     private readonly MqttSettings _settings;
     private IManagedMqttClient? _mqttClient;
     private readonly MongoDbService _mongoDb;
+    private readonly IHubContext<DashboardHub> _hubContext;
 
     public MqttService(
         ILogger<MqttService> logger,
         IOptions<MqttSettings> settings,
-        MongoDbService mongoDb)
+        MongoDbService mongoDb,
+        IHubContext<DashboardHub> hubContext)
     {
         _logger = logger;
         _settings = settings.Value;
         _mongoDb = mongoDb;
+        _hubContext = hubContext;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -90,6 +96,9 @@ public class MqttService : IHostedService, IDisposable
             await readingsCollection.InsertOneAsync(sensorReading);
 
             _logger.LogInformation("Zapisano odczyt z sensora {SensorId} do bazy danych", sensorReading.SensorId);
+
+            // Broadcast update via SignalR
+            await _hubContext.Clients.All.SendAsync("ReceiveSensorUpdate", sensorReading.SensorId, sensorReading.Value, sensorReading.Timestamp);
         }
         catch (JsonException ex)
         {
