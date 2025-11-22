@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getReadings, getSensors } from '../services/api';
 import { ArrowUp, ArrowDown, Download } from 'lucide-react';
+import { getUnit } from '../utils/units';
 
 const DataTable = () => {
     const [readings, setReadings] = useState([]);
@@ -10,7 +11,8 @@ const DataTable = () => {
         sensorType: '',
         from: '',
         to: '',
-        sort: 'desc'
+        sortBy: 'timestamp',
+        sortOrder: 'desc'
     });
 
     useEffect(() => {
@@ -32,14 +34,18 @@ const DataTable = () => {
             setReadings(data);
         };
         fetchReadings();
-    }, [filters]);
+    }, [filters.sensorId, filters.sensorType, filters.from, filters.to]); // Only re-fetch on API filter changes
 
     const handleFilterChange = (e) => {
         setFilters({ ...filters, [e.target.name]: e.target.value });
     };
 
-    const toggleSort = () => {
-        setFilters(prev => ({ ...prev, sort: prev.sort === 'asc' ? 'desc' : 'asc' }));
+    const toggleSort = (field) => {
+        setFilters(prev => ({
+            ...prev,
+            sortBy: field,
+            sortOrder: prev.sortBy === field && prev.sortOrder === 'asc' ? 'desc' : 'asc'
+        }));
     };
 
     const downloadData = (format) => {
@@ -118,22 +124,38 @@ const DataTable = () => {
                         <tr>
                             <th>Sensor ID</th>
                             <th>Type</th>
-                            <th>Value</th>
-                            <th onClick={toggleSort} className="sortable-header">
-                                Timestamp
-                                {filters.sort === 'asc' ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
+                            <th onClick={() => toggleSort('value')} className="cursor-pointer">
+                                <div className="sortable-header-content">
+                                    Value
+                                    {filters.sortBy === 'value' && (filters.sortOrder === 'asc' ? <ArrowUp size={16} /> : <ArrowDown size={16} />)}
+                                </div>
+                            </th>
+                            <th onClick={() => toggleSort('timestamp')} className="cursor-pointer">
+                                <div className="sortable-header-content">
+                                    Timestamp
+                                    {filters.sortBy === 'timestamp' && (filters.sortOrder === 'asc' ? <ArrowUp size={16} /> : <ArrowDown size={16} />)}
+                                </div>
                             </th>
                         </tr>
                     </thead>
                     <tbody>
-                        {readings.map((reading) => (
-                            <tr key={reading.id || Math.random()}>
-                                <td>{reading.sensorId}</td>
-                                <td>{reading.sensorType}</td>
-                                <td>{reading.value.toFixed(2)}</td>
-                                <td>{new Date(reading.timestamp * 1000).toLocaleString()}</td>
-                            </tr>
-                        ))}
+                        {readings
+                            .sort((a, b) => {
+                                const factor = filters.sortOrder === 'asc' ? 1 : -1;
+                                if (filters.sortBy === 'value') {
+                                    return (a.value - b.value) * factor;
+                                }
+                                return (a.timestamp - b.timestamp) * factor;
+                            })
+                            .slice(0, 100)
+                            .map((reading) => (
+                                <tr key={reading.id || Math.random()}>
+                                    <td>{reading.sensorId}</td>
+                                    <td>{reading.sensorType}</td>
+                                    <td>{reading.value.toFixed(2)} {getUnit(reading.sensorType)}</td>
+                                    <td>{new Date(reading.timestamp * 1000).toLocaleString()}</td>
+                                </tr>
+                            ))}
                     </tbody>
                 </table>
             </div>

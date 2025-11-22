@@ -3,26 +3,31 @@ import './App.css'
 import Dashboard from './components/Dashboard'
 import DataTable from './components/DataTable'
 import DataChart from './components/DataChart'
+import Navbar from './components/Navbar'
 
 function App() {
+  const [activeTab, setActiveTab] = useState('history');
+
   return (
-    <div className="container">
-      <header className="header">
-        <h1>Meteo Monitor</h1>
-      </header>
+    <div className="app-wrapper">
+      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      <main>
-        <section>
-          <Dashboard />
-        </section>
+      <main className="main-content">
+        {activeTab === 'dashboard' ? (
+          <section className="dashboard-section">
+            <Dashboard />
+          </section>
+        ) : (
+          <div className="history-view">
+            <section className="chart-section">
+              <DataChart />
+            </section>
 
-        <section style={{ marginTop: '2rem' }}>
-          <DataChart />
-        </section>
-
-        <section style={{ marginTop: '2rem' }}>
-          <DataTable />
-        </section>
+            <section className="table-section">
+              <DataTable />
+            </section>
+          </div>
+        )}
       </main>
     </div>
   )

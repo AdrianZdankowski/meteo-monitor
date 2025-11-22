@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getReadings, getSensors } from '../services/api';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { getUnit } from '../utils/units';
 
 const DataChart = () => {
     const [readings, setReadings] = useState([]);
@@ -20,21 +21,7 @@ const DataChart = () => {
         if (!selectedSensorId) return;
 
         const fetchReadings = async () => {
-            // Get last 50 readings for the chart
-            const data = await getReadings({ sensorId: selectedSensorId, sort: 'asc' }); // We want asc for chart
-            // API default is desc, so we might need to reverse or request asc.
-            // Let's assume we request 'asc' or just reverse client side.
-            // Actually my API impl supports sort.
-
-            // Wait, my API impl for getReadings defaults to desc.
-            // Let's pass sort: 'asc' to getReadings.
-            // But wait, getReadings in api.js passes sort param.
-            // And ReadingsController handles it.
-            // So I should pass sort: 'asc'.
-
-            // However, if I want the *latest* 50 readings but in chronological order,
-            // I should get them desc (latest first), take 50, then reverse them.
-            // Because if I get asc, I get the *oldest* readings.
+            const data = await getReadings({ sensorId: selectedSensorId, sort: 'asc' });
 
             const latestData = await getReadings({ sensorId: selectedSensorId, sort: 'desc' });
             const chartData = latestData.slice(0, 50).reverse().map(r => ({
@@ -67,8 +54,14 @@ const DataChart = () => {
                     <LineChart data={readings}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="formattedTime" />
-                        <YAxis />
-                        <Tooltip />
+                        <YAxis domain={['auto', 'auto']} />
+                        <Tooltip
+                            formatter={(value, name, props) => {
+                                const sensor = sensors.find(s => s.sensorId === selectedSensorId);
+                                const unit = sensor ? getUnit(sensor.sensorType) : '';
+                                return [`${value} ${unit}`, name];
+                            }}
+                        />
                         <Legend />
                         <Line type="monotone" dataKey="value" stroke="#8884d8" activeDot={{ r: 8 }} />
                     </LineChart>
