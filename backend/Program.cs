@@ -1,5 +1,6 @@
 using backend.Models;
 using backend.Services;
+using backend.Hubs;
 
 // Add services to the container.
 
@@ -8,9 +9,10 @@ builder.Services.AddCors(options => {
     options.AddDefaultPolicy(
         policy =>
         {
-            policy.AllowAnyOrigin()
+            policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
                   .AllowAnyHeader()
-                  .AllowAnyMethod();
+                  .AllowAnyMethod()
+                  .AllowCredentials(); // Required for SignalR
         });     
 });
 
@@ -24,12 +26,15 @@ builder.Services.Configure<MqttSettings>(
     builder.Configuration.GetSection("Mqtt"));
 builder.Services.AddHostedService<MqttService>();
 
+builder.Services.AddControllers();
+builder.Services.AddSignalR();
+
 var app = builder.Build();
 app.UseCors();
 
 var api = app.MapGroup("/api");
 
-//builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+app.MapControllers();
+app.MapHub<DashboardHub>("/dashboardHub");
 
 app.Run();
