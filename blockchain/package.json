@@ -1,0 +1,19 @@
+{
+  "name": "meteo-monitor-blockchain",
+  "version": "1.0.0",
+  "description": "Smart contracts for meteo-monitor sensor token rewards",
+  "scripts": {
+    "deploy": "node scripts/deploy.js"
+  },
+  "keywords": [
+    "ethereum",
+    "smart-contracts",
+    "erc20"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ethers": "^6.9.0",
+    "solc": "^0.8.20"
+  }
+}
