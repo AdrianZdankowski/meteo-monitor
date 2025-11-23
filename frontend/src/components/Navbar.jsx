@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, History } from 'lucide-react';
+import { LayoutDashboard, History, Coins } from 'lucide-react';
 
 const Navbar = ({ activeTab, setActiveTab }) => {
     return (
@@ -21,6 +21,13 @@ const Navbar = ({ activeTab, setActiveTab }) => {
                 >
                     <LayoutDashboard size={20} />
                     <span>Live Dashboard</span>
+                </button>
+                <button
+                    className={`nav-item ${activeTab === 'tokens' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('tokens')}
+                >
+                    <Coins size={20} />
+                    <span>Token Rewards</span>
                 </button>
             </div>
         </nav>

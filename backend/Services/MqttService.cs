@@ -20,17 +20,20 @@ public class MqttService : IHostedService, IDisposable
     private IManagedMqttClient? _mqttClient;
     private readonly MongoDbService _mongoDb;
     private readonly IHubContext<DashboardHub> _hubContext;
+    private readonly BlockchainService _blockchainService;
 
     public MqttService(
         ILogger<MqttService> logger,
         IOptions<MqttSettings> settings,
         MongoDbService mongoDb,
-        IHubContext<DashboardHub> hubContext)
+        IHubContext<DashboardHub> hubContext,
+        BlockchainService blockchainService)
     {
         _logger = logger;
         _settings = settings.Value;
         _mongoDb = mongoDb;
         _hubContext = hubContext;
+        _blockchainService = blockchainService;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -97,6 +100,16 @@ public class MqttService : IHostedService, IDisposable
 
             _logger.LogInformation("Zapisano odczyt z sensora {SensorId} do bazy danych", sensorReading.SensorId);
 
+            // Reward sensor with tokens
+            var sensorsCollection = _mongoDb.GetCollection<Sensor>("sensors");
+            var filter = Builders<Sensor>.Filter.Eq(s => s.SensorId, sensorId);
+            var sensor = await sensorsCollection.Find(filter).FirstOrDefaultAsync();
+            
+            if (sensor != null && !string.IsNullOrEmpty(sensor.WalletAddress))
+            {
+                await _blockchainService.RewardSensorAsync(sensor.WalletAddress);
+            }
+
             // Broadcast update via SignalR
             await _hubContext.Clients.All.SendAsync("ReceiveSensorUpdate", sensorReading.SensorId, sensorReading.Value, sensorReading.Timestamp);
         }
@@ -122,15 +135,17 @@ public class MqttService : IHostedService, IDisposable
 
             if (existingSensor == null)
             {
-                // Utwórz nowy sensor
+                // Utwórz nowy sensor z wygenerowanym adresem portfela
                 var newSensor = new Sensor
                 {
                     SensorId = sensorId,
                     SensorType = sensorType,
+                    WalletAddress = _blockchainService.GenerateNewWallet()
                 };
 
                 await sensorsCollection.InsertOneAsync(newSensor);
-                _logger.LogInformation("Zarejestrowano nowy sensor: {SensorId} ({SensorType})", sensorId, sensorType);
+                _logger.LogInformation("Zarejestrowano nowy sensor: {SensorId} ({SensorType}) z portfelem: {Wallet}", 
+                    sensorId, sensorType, newSensor.WalletAddress);
             }
         }
         catch (Exception ex)

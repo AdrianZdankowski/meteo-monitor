@@ -26,11 +26,20 @@ builder.Services.Configure<MqttSettings>(
     builder.Configuration.GetSection("Mqtt"));
 builder.Services.AddHostedService<MqttService>();
 
+// Configure Blockchain
+builder.Services.Configure<BlockchainSettings>(
+    builder.Configuration.GetSection("Blockchain"));
+builder.Services.AddSingleton<BlockchainService>();
+
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
 
 var app = builder.Build();
 app.UseCors();
+
+// Initialize blockchain service
+var blockchainService = app.Services.GetRequiredService<BlockchainService>();
+await blockchainService.InitializeAsync();
 
 var api = app.MapGroup("/api");
 

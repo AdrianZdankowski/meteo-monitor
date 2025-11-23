@@ -16,9 +16,16 @@ services:
       - Mqtt__BrokerPort=1883
       - Mqtt__ClientId=backend-service
       - Mqtt__Topics__0=sensors/#
+      - Blockchain__Enabled=true
+      - Blockchain__RpcUrl=http://anvil:8545
+      - Blockchain__PrivateKey=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+      - Blockchain__ContractAddress=0x5FbDB2315678afecb367f032d93F642f64180aa3
+      - Blockchain__RewardAmount=10
+      - Blockchain__ChainId=31337
     depends_on:
       - mongodb
       - mqtt-broker
+      - anvil
     networks:
       - meteo-network
 
@@ -41,6 +48,15 @@ services:
       - "9001:9001"
     volumes:
       - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    networks:
+      - meteo-network
+
+  anvil:
+    build:
+      context: ./anvil
+      dockerfile: Dockerfile
+    ports:
+      - "8545:8545"
     networks:
       - meteo-network
 

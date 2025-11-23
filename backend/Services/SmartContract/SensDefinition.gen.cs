@@ -7,7 +7,6 @@ using Nethereum.ABI.FunctionEncoding.Attributes;
 using Nethereum.RPC.Eth.DTOs;
 using Nethereum.Contracts.CQS;
 using Nethereum.Contracts;
-using Nethereum.Contracts.ContractHandlers;
 using System.Threading;
 
 namespace backend.Services.SmartContract.ContractDefinition
@@ -204,59 +203,7 @@ namespace backend.Services.SmartContract.ContractDefinition
         public virtual BigInteger ReturnValue1 { get; set; }
     }
 
-    public partial class SensService
-    {
-        public static Task<TransactionReceipt> DeployContractAndWaitForReceiptAsync(Nethereum.Web3.Web3 web3, SensDeployment sensDeployment, CancellationTokenSource cancellationTokenSource = null)
-        {
-            return web3.Eth.GetContractDeploymentHandler<SensDeployment>().SendRequestAndWaitForReceiptAsync(sensDeployment, cancellationTokenSource);
-        }
 
-        public static async Task<SensService> DeployContractAndGetServiceAsync(Nethereum.Web3.Web3 web3, SensDeployment sensDeployment, CancellationTokenSource cancellationTokenSource = null)
-        {
-            var receipt = await DeployContractAndWaitForReceiptAsync(web3, sensDeployment, cancellationTokenSource);
-            return new SensService(web3, receipt.ContractAddress);
-        }
 
-        protected Nethereum.Web3.Web3 Web3{ get; }
 
-        public ContractHandler ContractHandler { get; }
-
-        public SensService(Nethereum.Web3.Web3 web3, string contractAddress)
-        {
-            Web3 = web3;
-            ContractHandler = web3.Eth.GetContractHandler(contractAddress);
-        }
-
-        public Task<BigInteger> BalanceOfQueryAsync(string owner, BlockParameter blockParameter = null)
-        {
-            var balanceOfFunction = new BalanceOfFunction();
-            balanceOfFunction.Owner = owner;
-            
-            return ContractHandler.QueryAsync<BalanceOfFunction, BigInteger>(balanceOfFunction, blockParameter);
-        }
-
-        public Task<byte> DecimalsQueryAsync(BlockParameter blockParameter = null)
-        {
-            return ContractHandler.QueryAsync<DecimalsFunction, byte>(null, blockParameter);
-        }
-
-        public Task<string> NameQueryAsync(BlockParameter blockParameter = null)
-        {
-            return ContractHandler.QueryAsync<NameFunction, string>(null, blockParameter);
-        }
-
-        public Task<string> SymbolQueryAsync(BlockParameter blockParameter = null)
-        {
-            return ContractHandler.QueryAsync<SymbolFunction, string>(null, blockParameter);
-        }
-
-        public Task<TransactionReceipt> TransferRequestAndWaitForReceiptAsync(string to, BigInteger value, CancellationTokenSource cancellationToken = null)
-        {
-            var transferFunction = new TransferFunction();
-            transferFunction.To = to;
-            transferFunction.Value = value;
-            
-             return ContractHandler.SendRequestAndWaitForReceiptAsync(transferFunction, cancellationToken);
-        }
-    }
 }
