@@ -35,16 +35,16 @@ const DataChart = () => {
 
     return (
         <div className="chart-container">
-            <div className="control-group" style={{ marginBottom: '1rem' }}>
+            <div className="control-group" style={{ marginBottom: '0.5rem' }}>
                 <label>Select Sensor for Graph</label>
                 <select
                     value={selectedSensorId}
                     onChange={(e) => setSelectedSensorId(e.target.value)}
                     className="control-input"
-                    style={{ maxWidth: '300px' }}
+                    style={{ maxWidth: '200px' }}
                 >
                     {sensors.map(s => (
-                        <option key={s.sensorId} value={s.sensorId}>{s.sensorId} ({s.sensorType})</option>
+                        <option key={s.sensorId} value={s.sensorId}>{s.sensorId}</option>
                     ))}
                 </select>
             </div>
@@ -59,11 +59,17 @@ const DataChart = () => {
                             formatter={(value, name, props) => {
                                 const sensor = sensors.find(s => s.sensorId === selectedSensorId);
                                 const unit = sensor ? getUnit(sensor.sensorType) : '';
-                                return [`${value} ${unit}`, name];
+                                return [`${value} ${unit}`, sensor ? sensor.sensorType : 'Value'];
                             }}
                         />
                         <Legend />
-                        <Line type="monotone" dataKey="value" stroke="#8884d8" activeDot={{ r: 8 }} />
+                        <Line
+                            type="monotone"
+                            dataKey="value"
+                            name={sensors.find(s => s.sensorId === selectedSensorId)?.sensorType || "Value"}
+                            stroke="#8884d8"
+                            activeDot={{ r: 8 }}
+                        />
                     </LineChart>
                 </ResponsiveContainer>
             </div>

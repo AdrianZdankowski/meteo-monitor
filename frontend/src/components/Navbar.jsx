@@ -1,11 +1,12 @@
 import React from 'react';
-import { LayoutDashboard, History, Coins } from 'lucide-react';
+import { LayoutDashboard, History, Coins, CloudSun } from 'lucide-react';
 
 const Navbar = ({ activeTab, setActiveTab }) => {
     return (
         <nav className="navbar">
-            <div className="navbar-brand">
-                <h1>Meteo Monitor</h1>
+            <div className="navbar-brand" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <CloudSun size={32} color="#3b82f6" />
+                <h1 style={{ background: 'none', WebkitTextFillColor: 'initial', color: '#1e293b', fontSize: '1.5rem' }}>MeteoMonitor</h1>
             </div>
             <div className="navbar-menu">
                 <button
