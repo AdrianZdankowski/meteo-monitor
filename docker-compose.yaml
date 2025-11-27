@@ -10,15 +10,10 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - MongoDb__ConnectionString=mongodb://admin:admin123@mongodb:27017/?authSource=admin
-      - MongoDb__DatabaseName=meteomonitor
-      - Mqtt__BrokerHost=mqtt-broker
-      - Mqtt__BrokerPort=1883
-      - Mqtt__ClientId=backend-service
-      - Mqtt__Topics__0=sensors/#
     depends_on:
       - mongodb
       - mqtt-broker
+      - anvil
     networks:
       - meteo-network
 
@@ -41,6 +36,15 @@ services:
       - "9001:9001"
     volumes:
       - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    networks:
+      - meteo-network
+
+  anvil:
+    build:
+      context: ./anvil
+      dockerfile: Dockerfile
+    ports:
+      - "8545:8545"
     networks:
       - meteo-network
 

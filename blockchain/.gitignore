@@ -1,0 +1,4 @@
+node_modules/
+scripts/compile.js
+package.json
+package-lock.json

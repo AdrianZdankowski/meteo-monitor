@@ -15,4 +15,6 @@ public class Sensor
     [BsonElement("sensor_type")]
     public string SensorType { get; set; } = string.Empty;
 
+    [BsonElement("wallet_address")]
+    public string WalletAddress { get; set; } = string.Empty;
 }
