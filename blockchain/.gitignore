@@ -1,3 +1,4 @@
 node_modules/
-deployment.json
-*.abi.json
+scripts/compile.js
+package.json
+package-lock.json

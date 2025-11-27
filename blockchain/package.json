@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Smart contracts for meteo-monitor sensor token rewards",
   "scripts": {
-    "deploy": "node scripts/deploy.js"
+    "compile": "node scripts/compile.js"
   },
   "keywords": [
     "ethereum",
