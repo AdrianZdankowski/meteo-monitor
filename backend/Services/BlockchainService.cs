@@ -3,7 +3,8 @@ using Nethereum.Web3.Accounts;
 using Microsoft.Extensions.Options;
 using backend.Models;
 using System.Numerics;
-using backend.Services.SmartContract.ContractDefinition;
+using backend.Services.ContractDefinition.SensorContract;
+using backend.Services.ContractDefinition.SensorContract.ContractDefinition;
 using Nethereum.Hex.HexConvertors.Extensions;
 
 namespace backend.Services;
@@ -13,7 +14,7 @@ public class BlockchainService
     private readonly ILogger<BlockchainService> _logger;
     private readonly BlockchainSettings _settings;
     private readonly Web3 _web3;
-    private SensService? _sensService;
+    private SensorContractService? _sensorContractService;
     private readonly Account _account;
 
     public BlockchainService(ILogger<BlockchainService> logger, IOptions<BlockchainSettings> settings)
@@ -51,17 +52,34 @@ public class BlockchainService
         {
             if (string.IsNullOrEmpty(_settings.ContractAddress))
             {
-                _logger.LogWarning("Contract address not configured. Please deploy the contract first.");
-                return;
-            }
+                _logger.LogInformation("No contract address configured. Deploying new contract...");
 
-            _logger.LogInformation("Connecting to SensorToken contract at: {Address}", _settings.ContractAddress);
-            _sensService = new SensService(_web3, _settings.ContractAddress);
+                var deployment = new SensorContractDeployment()
+                {
+                    InitialAmount = Web3.Convert.ToWei(1000000),
+                    TokenName = "SensorToken",
+                    DecimalUnits = 18,
+                    TokenSymbol = "SENS"
+                };
+
+                _sensorContractService = await SensorContractService.DeployContractAndGetServiceAsync(_web3, deployment);
+                var contractAddress = _sensorContractService.ContractAddress;
+                
+                _logger.LogInformation("Contract deployed to: {Address}", contractAddress);
+                
+                // Update settings in memory (optional, but good for consistency)
+                _settings.ContractAddress = contractAddress;
+            }
+            else
+            {
+                _logger.LogInformation("Connecting to SensorToken contract at: {Address}", _settings.ContractAddress);
+                _sensorContractService = new SensorContractService(_web3, _settings.ContractAddress);
+            }
             
             // Verify contract connection
-            var name = await _sensService.NameQueryAsync();
-            var symbol = await _sensService.SymbolQueryAsync();
-            var balance = await _sensService.BalanceOfQueryAsync(_account.Address);
+            var name = await _sensorContractService.NameQueryAsync();
+            var symbol = await _sensorContractService.SymbolQueryAsync();
+            var balance = await _sensorContractService.BalanceOfQueryAsync(_account.Address);
             
             _logger.LogInformation("Connected to token: {Name} ({Symbol})", name, symbol);
             _logger.LogInformation("Contract owner balance: {Balance} tokens", Web3.Convert.FromWei(balance));
@@ -90,14 +108,14 @@ public class BlockchainService
 
     public async Task<decimal> GetBalanceAsync(string walletAddress)
     {
-        if (!_settings.Enabled || _sensService == null)
+        if (!_settings.Enabled || _sensorContractService == null)
         {
             return 0;
         }
 
         try
         {
-            var balance = await _sensService.BalanceOfQueryAsync(walletAddress);
+            var balance = await _sensorContractService.BalanceOfQueryAsync(walletAddress);
             return Web3.Convert.FromWei(balance);
         }
         catch (Exception ex)
@@ -115,7 +133,7 @@ public class BlockchainService
             return;
         }
 
-        if (_sensService == null)
+        if (_sensorContractService == null)
         {
             _logger.LogWarning("Blockchain service not initialized. Skipping reward.");
             return;
@@ -134,7 +152,7 @@ public class BlockchainService
 
             _logger.LogInformation("Sending {Amount} tokens to {Wallet}", _settings.RewardAmount, sensorWalletAddress);
 
-            var receipt = await _sensService.TransferRequestAndWaitForReceiptAsync(sensorWalletAddress, amountInWei);
+            var receipt = await _sensorContractService.TransferRequestAndWaitForReceiptAsync(sensorWalletAddress, amountInWei);
 
             _logger.LogInformation("Reward transaction successful: {TransactionHash}", receipt.TransactionHash);
         }

@@ -13,17 +13,23 @@ async function main() {
     console.log('Deploying contracts with account:', wallet.address);
     console.log('Account balance:', ethers.formatEther(await provider.getBalance(wallet.address)), 'ETH');
 
-    // Read contract source
-    const contractPath = path.join(__dirname, '../contracts/SensorToken.sol');
-    const source = fs.readFileSync(contractPath, 'utf8');
 
-    // Compile contract (simple compilation for single file)
+    // Read contract sources
+    const sensorTokenPath = path.join(__dirname, '../contracts/SensorToken.sol');
+    const ierc20Path = path.join(__dirname, '../contracts/IERC20.sol');
+    const sensorTokenSource = fs.readFileSync(sensorTokenPath, 'utf8');
+    const ierc20Source = fs.readFileSync(ierc20Path, 'utf8');
+
+    // Compile contracts with imports
     const solc = require('solc');
     const input = {
         language: 'Solidity',
         sources: {
             'SensorToken.sol': {
-                content: source
+                content: sensorTokenSource
+            },
+            'IERC20.sol': {
+                content: ierc20Source
             }
         },
         settings: {
@@ -89,6 +95,11 @@ async function main() {
     const abiPath = path.join(__dirname, '../SensorToken.abi.json');
     fs.writeFileSync(abiPath, JSON.stringify(abi, null, 2));
     console.log('ABI saved to:', abiPath);
+
+    // Save Bytecode
+    const binPath = path.join(__dirname, '../SensorToken.bin');
+    fs.writeFileSync(binPath, bytecode);
+    console.log('Bytecode saved to:', binPath);
 
     console.log('\n=== Deployment Summary ===');
     console.log('Contract Address:', contractAddress);

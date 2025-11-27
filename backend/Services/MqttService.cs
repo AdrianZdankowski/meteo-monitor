@@ -100,18 +100,27 @@ public class MqttService : IHostedService, IDisposable
 
             _logger.LogInformation("Zapisano odczyt z sensora {SensorId} do bazy danych", sensorReading.SensorId);
 
-            // Reward sensor with tokens
-            var sensorsCollection = _mongoDb.GetCollection<Sensor>("sensors");
-            var filter = Builders<Sensor>.Filter.Eq(s => s.SensorId, sensorId);
-            var sensor = await sensorsCollection.Find(filter).FirstOrDefaultAsync();
-            
-            if (sensor != null && !string.IsNullOrEmpty(sensor.WalletAddress))
-            {
-                await _blockchainService.RewardSensorAsync(sensor.WalletAddress);
-            }
-
-            // Broadcast update via SignalR
+            // Broadcast update via SignalR IMMEDIATELY (don't wait for blockchain)
             await _hubContext.Clients.All.SendAsync("ReceiveSensorUpdate", sensorReading.SensorId, sensorReading.Value, sensorReading.Timestamp);
+            // Reward sensor with tokens in background (non-blocking)
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var sensorsCollection = _mongoDb.GetCollection<Sensor>("sensors");
+                    var filter = Builders<Sensor>.Filter.Eq(s => s.SensorId, sensorId);
+                    var sensor = await sensorsCollection.Find(filter).FirstOrDefaultAsync();
+                    
+                    if (sensor != null && !string.IsNullOrEmpty(sensor.WalletAddress))
+                    {
+                        await _blockchainService.RewardSensorAsync(sensor.WalletAddress);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error rewarding sensor {SensorId} in background", sensorId);
+                }
+            });
         }
         catch (JsonException ex)
         {
