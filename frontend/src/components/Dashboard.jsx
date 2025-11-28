@@ -3,6 +3,7 @@ import { getDashboardData } from '../services/api';
 import { startConnection } from '../services/signalr';
 import { Activity, Thermometer, Droplets, Wind } from 'lucide-react';
 import { getUnit } from '../utils/units';
+import '../styles/Dashboard.css';
 
 const Dashboard = () => {
     const [data, setData] = useState([]);
@@ -20,19 +21,7 @@ const Dashboard = () => {
         fetchData();
 
         const handleUpdate = (update) => {
-            setData(prevData => {
-                const index = prevData.findIndex(d => d.sensorId === update.sensorId);
-                if (index > -1) {
-                    const newData = [...prevData];
-                    newData[index] = {
-                        ...newData[index],
-                        lastValue: update.value,
-                        lastTimestamp: update.timestamp
-                    };
-                    return newData;
-                }
-                return prevData;
-            });
+            fetchData();
         };
 
         startConnection(handleUpdate);
