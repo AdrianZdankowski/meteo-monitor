@@ -34,7 +34,7 @@ const DataTable = () => {
             setReadings(data);
         };
         fetchReadings();
-    }, [filters.sensorId, filters.sensorType, filters.from, filters.to]); // Only re-fetch on API filter changes
+    }, [filters.sensorId, filters.sensorType, filters.from, filters.to]);
 
     const handleFilterChange = (e) => {
         setFilters({ ...filters, [e.target.name]: e.target.value });

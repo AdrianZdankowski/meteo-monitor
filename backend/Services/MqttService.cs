@@ -5,7 +5,6 @@ using Microsoft.Extensions.Options;
 using backend.Models;
 using System.Text;
 using System.Text.Json;
-using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace backend.Services;
@@ -41,7 +40,6 @@ public class MqttService : IHostedService, IDisposable
         var factory = new MqttFactory();
         _mqttClient = factory.CreateManagedMqttClient();
 
-        // Konfiguracja opcji klienta
         var clientOptions = new MqttClientOptionsBuilder()
             .WithTcpServer(_settings.BrokerHost, _settings.BrokerPort)
             .WithClientId(_settings.ClientId)
@@ -51,18 +49,15 @@ public class MqttService : IHostedService, IDisposable
             .WithClientOptions(clientOptions)
             .Build();
 
-        // Obsługa otrzymanych wiadomości
         _mqttClient.ApplicationMessageReceivedAsync += OnMessageReceived;
 
-        // Połączenie z brokerem
         await _mqttClient.StartAsync(managedOptions);
-        _logger.LogInformation("Połączono z MQTT brokerem na {Host}:{Port}", _settings.BrokerHost, _settings.BrokerPort);
+        _logger.LogInformation("Connected with MQTT broker at {Host}:{Port}", _settings.BrokerHost, _settings.BrokerPort);
 
-        // Subskrypcja tematów
         foreach (var topic in _settings.Topics)
         {
             await _mqttClient.SubscribeAsync(topic);
-            _logger.LogInformation("Zasubskrybowano temat: {Topic}", topic);
+            _logger.LogInformation("Subscribed to topic: {Topic}", topic);
         }
     }
 
@@ -71,21 +66,18 @@ public class MqttService : IHostedService, IDisposable
         var payload = Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment);
         var topic = e.ApplicationMessage.Topic;
 
-        _logger.LogInformation("Otrzymano wiadomość z tematu {Topic}: {Payload}", topic, payload);
+        _logger.LogInformation("Received a message from topic {Topic}: {Payload}", topic, payload);
 
         try
         {
-            // Parsowanie JSON z payload
             var jsonDocument = JsonDocument.Parse(payload);
             var root = jsonDocument.RootElement;
 
             var sensorId = root.GetProperty("sensor_id").GetString() ?? string.Empty;
             var sensorType = root.GetProperty("sensor_type").GetString() ?? string.Empty;
 
-            // Rejestracja sensora (jeśli pierwszy raz)
             await RegisterSensorIfNewAsync(sensorId, sensorType);
 
-            // Tworzenie obiektu SensorReading
             var sensorReading = new SensorReading
             {
                 SensorId = sensorId,
@@ -94,15 +86,12 @@ public class MqttService : IHostedService, IDisposable
                 Value = root.GetProperty("value").GetDouble(),
             };
 
-            // Zapisywanie do MongoDB
             var readingsCollection = _mongoDb.GetCollection<SensorReading>("sensor_readings");
             await readingsCollection.InsertOneAsync(sensorReading);
 
-            _logger.LogInformation("Zapisano odczyt z sensora {SensorId} do bazy danych", sensorReading.SensorId);
+            _logger.LogInformation("Saved a reading from sensor {SensorId} to the database", sensorReading.SensorId);
 
-            // Broadcast update via SignalR IMMEDIATELY (don't wait for blockchain)
             await _hubContext.Clients.All.SendAsync("ReceiveSensorUpdate", sensorReading.SensorId, sensorReading.Value, sensorReading.Timestamp);
-            // Reward sensor with tokens in background (non-blocking)
             _ = Task.Run(async () =>
             {
                 try
@@ -124,11 +113,11 @@ public class MqttService : IHostedService, IDisposable
         }
         catch (JsonException ex)
         {
-            _logger.LogError(ex, "Błąd parsowania JSON z tematu {Topic}", topic);
+            _logger.LogError(ex, "Error while parsing JSON from topic: {Topic}", topic);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Błąd zapisywania danych do MongoDB z tematu {Topic}", topic);
+            _logger.LogError(ex, "Error while saving data to MongoDB in topic: {Topic}", topic);
         }
     }
 
@@ -138,13 +127,11 @@ public class MqttService : IHostedService, IDisposable
         {
             var sensorsCollection = _mongoDb.GetCollection<Sensor>("sensors");
 
-            // Sprawdź czy sensor już istnieje
             var filter = Builders<Sensor>.Filter.Eq(s => s.SensorId, sensorId);
             var existingSensor = await sensorsCollection.Find(filter).FirstOrDefaultAsync();
 
             if (existingSensor == null)
             {
-                // Utwórz nowy sensor z wygenerowanym adresem portfela
                 var newSensor = new Sensor
                 {
                     SensorId = sensorId,
@@ -153,13 +140,13 @@ public class MqttService : IHostedService, IDisposable
                 };
 
                 await sensorsCollection.InsertOneAsync(newSensor);
-                _logger.LogInformation("Zarejestrowano nowy sensor: {SensorId} ({SensorType}) z portfelem: {Wallet}", 
+                _logger.LogInformation("Registered a new sensor: {SensorId} ({SensorType}) with wallet: {Wallet}", 
                     sensorId, sensorType, newSensor.WalletAddress);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Błąd rejestracji sensora {SensorId}", sensorId);
+            _logger.LogError(ex, "Error while registering sensor {SensorId}", sensorId);
         }
     }
 
@@ -168,7 +155,7 @@ public class MqttService : IHostedService, IDisposable
         if (_mqttClient != null)
         {
             await _mqttClient.StopAsync();
-            _logger.LogInformation("Rozłączono z MQTT brokerem");
+            _logger.LogInformation("Disconnected from the MQTT broker");
         }
     }
 

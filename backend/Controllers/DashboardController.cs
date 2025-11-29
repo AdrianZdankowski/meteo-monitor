@@ -27,12 +27,10 @@ public class DashboardController : ControllerBase
 
         foreach (var sensor in sensors)
         {
-            // Get last value
             var lastReading = await readingsCollection.Find(r => r.SensorId == sensor.SensorId)
                 .SortByDescending(r => r.Timestamp)
                 .FirstOrDefaultAsync();
 
-            // Get average of last 100
             var last100Readings = await readingsCollection.Find(r => r.SensorId == sensor.SensorId)
                 .SortByDescending(r => r.Timestamp)
                 .Limit(100)

@@ -52,7 +52,6 @@ public class ReadingsController : ControllerBase
             ? Builders<SensorReading>.Sort.Ascending(r => r.Timestamp)
             : Builders<SensorReading>.Sort.Descending(r => r.Timestamp);
 
-        // Limit to 1000 by default to prevent overload if no filters
         var readings = await collection.Find(filter).Sort(sortDefinition).Limit(1000).ToListAsync();
 
         return Ok(readings);

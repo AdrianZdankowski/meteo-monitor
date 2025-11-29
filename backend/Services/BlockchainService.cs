@@ -2,10 +2,8 @@ using Nethereum.Web3;
 using Nethereum.Web3.Accounts;
 using Microsoft.Extensions.Options;
 using backend.Models;
-using System.Numerics;
 using backend.Services.ContractDefinition.SensorContract;
 using backend.Services.ContractDefinition.SensorContract.ContractDefinition;
-using Nethereum.Hex.HexConvertors.Extensions;
 
 namespace backend.Services;
 
@@ -67,7 +65,6 @@ public class BlockchainService
                 
                 _logger.LogInformation("Contract deployed to: {Address}", contractAddress);
                 
-                // Update settings in memory (optional, but good for consistency)
                 _settings.ContractAddress = contractAddress;
             }
             else
@@ -76,7 +73,6 @@ public class BlockchainService
                 _sensorContractService = new SensorContractService(_web3, _settings.ContractAddress);
             }
             
-            // Verify contract connection
             var name = await _sensorContractService.NameQueryAsync();
             var symbol = await _sensorContractService.SymbolQueryAsync();
             var balance = await _sensorContractService.BalanceOfQueryAsync(_account.Address);
@@ -147,7 +143,6 @@ public class BlockchainService
 
         try
         {
-            // Convert reward amount to Wei (assuming 18 decimals)
             var amountInWei = Web3.Convert.ToWei(_settings.RewardAmount);
 
             _logger.LogInformation("Sending {Amount} tokens to {Wallet}", _settings.RewardAmount, sensorWalletAddress);
