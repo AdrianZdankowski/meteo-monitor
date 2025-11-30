@@ -65,7 +65,7 @@ const TokenDashboard = () => {
                 <h2><Coins className="header-icon" /> Sensor Token Rewards</h2>
                 <div className="total-tokens">
                     <span className="total-label">Total Distributed:</span>
-                    <span className="total-value">{totalTokens.toFixed(2)} SENS</span>
+                    <span className="total-value">{totalTokens.toFixed(2)} SETO</span>
                 </div>
             </div>
 
@@ -76,7 +76,7 @@ const TokenDashboard = () => {
                             <th>Sensor ID</th>
                             <th>Type</th>
                             <th>Wallet Address</th>
-                            <th>Token Balance (SENS)</th>
+                            <th>Token Balance (SETO)</th>
                         </tr>
                     </thead>
                     <tbody>

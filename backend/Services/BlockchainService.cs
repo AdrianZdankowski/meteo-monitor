@@ -57,7 +57,7 @@ public class BlockchainService
                     InitialAmount = Web3.Convert.ToWei(1000000),
                     TokenName = "SensorToken",
                     DecimalUnits = 18,
-                    TokenSymbol = "SENS"
+                    TokenSymbol = "SETO"
                 };
 
                 _sensorContractService = await SensorContractService.DeployContractAndGetServiceAsync(_web3, deployment);
