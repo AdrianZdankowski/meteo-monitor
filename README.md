@@ -123,25 +123,37 @@ docker-compose up -d --build
 
 ### Backend API
 
-The ASP.NET Core backend provides REST APIs and real-time communication:
-
 #### Key Services
 
-| Service | Description |
-|---------|-------------|
-| `MongoDbService` | MongoDB database operations |
-| `MqttService` | MQTT message subscription & processing |
-| `BlockchainService` | Ethereum smart contract interactions |
-| `DashboardHub` | SignalR hub for real-time updates |
+| Service | Interface | Description |
+|---------|-----------|-------------|
+| `MongoDbService` | `IMongoDbService` | MongoDB database operations |
+| `MqttService` | - | MQTT message subscription & processing |
+| `BlockchainService` | `IBlockchainService` | Ethereum smart contract interactions |
+| `DashboardHub` | - | SignalR hub for real-time updates |
+
+#### Repositories
+
+| Repository | Interface | Description |
+|------------|-----------|-------------|
+| `SensorRepository` | `ISensorRepository` | CRUD operations for sensors |
+| `ReadingRepository` | `IReadingRepository` | CRUD operations for sensor readings |
+
+#### DTOs
+
+| DTO | Description |
+|-----|-------------|
+| `DashboardSensorDto` | Dashboard view sensor data with statistics |
+| `SensorWithBalanceDto` | Sensor data with blockchain token balance |
 
 #### Sensor Processing Flow
 
 1. MQTT message received on `sensors/#` topic
 2. Parse JSON payload (sensor_id, sensor_type, timestamp, value)
-3. Register new sensors with generated Ethereum wallet
-4. Store reading in MongoDB
+3. Register new sensors with generated Ethereum wallet (via `ISensorRepository`)
+4. Store reading in MongoDB (via `IReadingRepository`)
 5. Broadcast update via SignalR
-6. Reward sensor with SETO tokens (async)
+6. Reward sensor with SETO tokens (async via `IBlockchainService`)
 
 ### Frontend
 
