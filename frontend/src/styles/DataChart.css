@@ -1,0 +1,113 @@
+/* Chart Section */
+.chart-container {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+    min-height: 350px;
+    height: auto;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    margin-bottom: 3rem;
+    animation: fade-in-up 0.6s ease-out 0.3s backwards;
+}
+
+/* Controls Section */
+.controls {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    padding: 2rem;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    align-items: flex-end;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    animation: fade-in-up 0.6s ease-out 0.2s backwards;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    flex: 1;
+    min-width: 200px;
+}
+
+.control-group label {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.control-input {
+    padding: 0.875rem 1.25rem;
+    border: 2px solid transparent;
+    border-radius: 16px;
+    font-size: 1rem;
+    background: #f1f5f9;
+    transition: all 0.3s ease;
+    color: #1e293b;
+    font-weight: 500;
+}
+
+.control-input:focus {
+    outline: none;
+    background: white;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-left: auto;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.875rem 2rem;
+    border-radius: 100px;
+    /* Pill shape */
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+    letter-spacing: 0.02em;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn-green {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.btn-green:hover {
+    background: linear-gradient(135deg, #34d399, #059669);
+}
+
+.btn-blue {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.btn-blue:hover {
+    background: linear-gradient(135deg, #60a5fa, #2563eb);
+}

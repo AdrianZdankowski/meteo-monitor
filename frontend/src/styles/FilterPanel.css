@@ -1,0 +1,55 @@
+/* Filter Panel */
+.filter-panel {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    padding: 1.5rem;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: flex-end;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    animation: fade-in-up 0.6s ease-out 0.2s backwards;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 180px;
+}
+
+.filter-group label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.filter-input {
+    padding: 0.75rem 1rem;
+    border: 2px solid transparent;
+    border-radius: 16px;
+    font-size: 0.95rem;
+    background: white;
+    transition: all 0.3s ease;
+    color: #1e293b;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.filter-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.filter-actions {
+    display: flex;
+    gap: 1rem;
+    margin-left: auto;
+}
