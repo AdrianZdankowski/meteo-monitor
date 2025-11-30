@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getSensors } from '../services/api';
 import { startConnection } from '../services/signalr';
 import { Coins, Wallet } from 'lucide-react';
-import './TokenDashboard.css';
+import '../styles/TokenDashboard.css';
 
 const TokenDashboard = () => {
     const [sensors, setSensors] = useState([]);
