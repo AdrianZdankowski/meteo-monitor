@@ -1,7 +1,6 @@
 using backend.Models;
-using backend.Services;
+using backend.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Driver;
 
 namespace backend.Controllers;
 
@@ -9,11 +8,11 @@ namespace backend.Controllers;
 [Route("api/[controller]")]
 public class ReadingsController : ControllerBase
 {
-    private readonly MongoDbService _mongoDbService;
+    private readonly IReadingRepository _readingRepository;
 
-    public ReadingsController(MongoDbService mongoDbService)
+    public ReadingsController(IReadingRepository readingRepository)
     {
-        _mongoDbService = mongoDbService;
+        _readingRepository = readingRepository;
     }
 
     [HttpGet]
@@ -24,36 +23,12 @@ public class ReadingsController : ControllerBase
         [FromQuery] double? to,
         [FromQuery] string? sort = "desc")
     {
-        var collection = _mongoDbService.GetCollection<SensorReading>("sensor_readings");
-        var builder = Builders<SensorReading>.Filter;
-        var filter = builder.Empty;
-
-        if (!string.IsNullOrEmpty(sensorId))
-        {
-            filter &= builder.Eq(r => r.SensorId, sensorId);
-        }
-
-        if (!string.IsNullOrEmpty(sensorType))
-        {
-            filter &= builder.Eq(r => r.SensorType, sensorType);
-        }
-
-        if (from.HasValue)
-        {
-            filter &= builder.Gte(r => r.Timestamp, from.Value);
-        }
-
-        if (to.HasValue)
-        {
-            filter &= builder.Lte(r => r.Timestamp, to.Value);
-        }
-
-        var sortDefinition = sort == "asc"
-            ? Builders<SensorReading>.Sort.Ascending(r => r.Timestamp)
-            : Builders<SensorReading>.Sort.Descending(r => r.Timestamp);
-
-        // Limit to 1000 by default to prevent overload if no filters
-        var readings = await collection.Find(filter).Sort(sortDefinition).Limit(1000).ToListAsync();
+        var readings = await _readingRepository.GetAsync(
+            sensorId,
+            sensorType,
+            from,
+            to,
+            sort ?? "desc");
 
         return Ok(readings);
     }

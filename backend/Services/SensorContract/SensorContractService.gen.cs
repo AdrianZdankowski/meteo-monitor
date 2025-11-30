@@ -1,15 +1,7 @@
-using System;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 using System.Numerics;
-using Nethereum.Hex.HexTypes;
-using Nethereum.ABI.FunctionEncoding.Attributes;
 using Nethereum.Web3;
 using Nethereum.RPC.Eth.DTOs;
-using Nethereum.Contracts.CQS;
 using Nethereum.Contracts.ContractHandlers;
-using Nethereum.Contracts;
-using System.Threading;
 using backend.Services.ContractDefinition.SensorContract.ContractDefinition;
 
 namespace backend.Services.ContractDefinition.SensorContract
