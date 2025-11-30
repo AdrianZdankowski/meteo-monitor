@@ -1,5 +1,8 @@
 using backend.Models;
 using backend.Services;
+using backend.Services.Interfaces;
+using backend.Repositories;
+using backend.Repositories.Interfaces;
 using backend.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,17 +17,22 @@ builder.Services.AddCors(options => {
         });     
 });
 
+// Configuration
 builder.Services.Configure<MongoDbSettings>(
     builder.Configuration.GetSection("MongoDb"));
-builder.Services.AddSingleton<MongoDbService>();
-
 builder.Services.Configure<MqttSettings>(
     builder.Configuration.GetSection("Mqtt"));
-builder.Services.AddHostedService<MqttService>();
-
 builder.Services.Configure<BlockchainSettings>(
     builder.Configuration.GetSection("Blockchain"));
-builder.Services.AddSingleton<BlockchainService>();
+
+// Services
+builder.Services.AddSingleton<IMongoDbService, MongoDbService>();
+builder.Services.AddSingleton<IBlockchainService, BlockchainService>();
+builder.Services.AddHostedService<MqttService>();
+
+// Repositories
+builder.Services.AddSingleton<ISensorRepository, SensorRepository>();
+builder.Services.AddSingleton<IReadingRepository, ReadingRepository>();
 
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
@@ -32,10 +40,8 @@ builder.Services.AddSignalR();
 var app = builder.Build();
 app.UseCors();
 
-var blockchainService = app.Services.GetRequiredService<BlockchainService>();
+var blockchainService = app.Services.GetRequiredService<IBlockchainService>();
 await blockchainService.InitializeAsync();
-
-var api = app.MapGroup("/api");
 
 app.MapControllers();
 app.MapHub<DashboardHub>("/dashboardHub");

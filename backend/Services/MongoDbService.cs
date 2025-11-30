@@ -1,10 +1,11 @@
 using MongoDB.Driver;
 using backend.Models;
+using backend.Services.Interfaces;
 using Microsoft.Extensions.Options;
 
 namespace backend.Services;
 
-public class MongoDbService
+public class MongoDbService : IMongoDbService
 {
     private readonly IMongoDatabase _database;
 

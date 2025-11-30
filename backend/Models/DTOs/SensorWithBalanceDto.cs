@@ -1,6 +1,6 @@
-namespace backend.Models;
+namespace backend.Models.DTOs;
 
-public class SensorWithBalance
+public class SensorWithBalanceDto
 {
     public string? Id { get; set; }
     public string SensorId { get; set; } = string.Empty;

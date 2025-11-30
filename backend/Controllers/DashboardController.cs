@@ -1,7 +1,7 @@
 using backend.Models;
-using backend.Services;
+using backend.Models.DTOs;
+using backend.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Driver;
 
 namespace backend.Controllers;
 
@@ -9,38 +9,33 @@ namespace backend.Controllers;
 [Route("api/[controller]")]
 public class DashboardController : ControllerBase
 {
-    private readonly MongoDbService _mongoDbService;
+    private readonly ISensorRepository _sensorRepository;
+    private readonly IReadingRepository _readingRepository;
 
-    public DashboardController(MongoDbService mongoDbService)
+    public DashboardController(
+        ISensorRepository sensorRepository,
+        IReadingRepository readingRepository)
     {
-        _mongoDbService = mongoDbService;
+        _sensorRepository = sensorRepository;
+        _readingRepository = readingRepository;
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<object>>> Get()
+    public async Task<ActionResult<List<DashboardSensorDto>>> Get()
     {
-        var sensorsCollection = _mongoDbService.GetCollection<Sensor>("sensors");
-        var readingsCollection = _mongoDbService.GetCollection<SensorReading>("sensor_readings");
-        
-        var sensors = await sensorsCollection.Find(_ => true).ToListAsync();
-        var dashboardData = new List<object>();
+        var sensors = await _sensorRepository.GetAllAsync();
+        var dashboardData = new List<DashboardSensorDto>();
 
         foreach (var sensor in sensors)
         {
-            var lastReading = await readingsCollection.Find(r => r.SensorId == sensor.SensorId)
-                .SortByDescending(r => r.Timestamp)
-                .FirstOrDefaultAsync();
-
-            var last100Readings = await readingsCollection.Find(r => r.SensorId == sensor.SensorId)
-                .SortByDescending(r => r.Timestamp)
-                .Limit(100)
-                .ToListAsync();
+            var lastReading = await _readingRepository.GetLatestBySensorIdAsync(sensor.SensorId);
+            var last100Readings = await _readingRepository.GetLatestBySensorIdAsync(sensor.SensorId, 100);
 
             var average = last100Readings.Any() 
                 ? last100Readings.Average(r => r.Value) 
                 : 0;
 
-            dashboardData.Add(new
+            dashboardData.Add(new DashboardSensorDto
             {
                 SensorId = sensor.SensorId,
                 SensorType = sensor.SensorType,

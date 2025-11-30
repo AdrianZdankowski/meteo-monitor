@@ -3,9 +3,10 @@ using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
 using Microsoft.Extensions.Options;
 using backend.Models;
+using backend.Repositories.Interfaces;
+using backend.Services.Interfaces;
 using System.Text;
 using System.Text.Json;
-using MongoDB.Driver;
 
 namespace backend.Services;
 
@@ -17,20 +18,23 @@ public class MqttService : IHostedService, IDisposable
     private readonly ILogger<MqttService> _logger;
     private readonly MqttSettings _settings;
     private IManagedMqttClient? _mqttClient;
-    private readonly MongoDbService _mongoDb;
+    private readonly ISensorRepository _sensorRepository;
+    private readonly IReadingRepository _readingRepository;
     private readonly IHubContext<DashboardHub> _hubContext;
-    private readonly BlockchainService _blockchainService;
+    private readonly IBlockchainService _blockchainService;
 
     public MqttService(
         ILogger<MqttService> logger,
         IOptions<MqttSettings> settings,
-        MongoDbService mongoDb,
+        ISensorRepository sensorRepository,
+        IReadingRepository readingRepository,
         IHubContext<DashboardHub> hubContext,
-        BlockchainService blockchainService)
+        IBlockchainService blockchainService)
     {
         _logger = logger;
         _settings = settings.Value;
-        _mongoDb = mongoDb;
+        _sensorRepository = sensorRepository;
+        _readingRepository = readingRepository;
         _hubContext = hubContext;
         _blockchainService = blockchainService;
     }
@@ -86,8 +90,7 @@ public class MqttService : IHostedService, IDisposable
                 Value = root.GetProperty("value").GetDouble(),
             };
 
-            var readingsCollection = _mongoDb.GetCollection<SensorReading>("sensor_readings");
-            await readingsCollection.InsertOneAsync(sensorReading);
+            await _readingRepository.CreateAsync(sensorReading);
 
             _logger.LogInformation("Saved a reading from sensor {SensorId} to the database", sensorReading.SensorId);
 
@@ -96,9 +99,7 @@ public class MqttService : IHostedService, IDisposable
             {
                 try
                 {
-                    var sensorsCollection = _mongoDb.GetCollection<Sensor>("sensors");
-                    var filter = Builders<Sensor>.Filter.Eq(s => s.SensorId, sensorId);
-                    var sensor = await sensorsCollection.Find(filter).FirstOrDefaultAsync();
+                    var sensor = await _sensorRepository.GetBySensorIdAsync(sensorId);
                     
                     if (sensor != null && !string.IsNullOrEmpty(sensor.WalletAddress))
                     {
@@ -125,12 +126,9 @@ public class MqttService : IHostedService, IDisposable
     {
         try
         {
-            var sensorsCollection = _mongoDb.GetCollection<Sensor>("sensors");
+            var exists = await _sensorRepository.ExistsAsync(sensorId);
 
-            var filter = Builders<Sensor>.Filter.Eq(s => s.SensorId, sensorId);
-            var existingSensor = await sensorsCollection.Find(filter).FirstOrDefaultAsync();
-
-            if (existingSensor == null)
+            if (!exists)
             {
                 var newSensor = new Sensor
                 {
@@ -139,7 +137,7 @@ public class MqttService : IHostedService, IDisposable
                     WalletAddress = _blockchainService.GenerateNewWallet()
                 };
 
-                await sensorsCollection.InsertOneAsync(newSensor);
+                await _sensorRepository.CreateAsync(newSensor);
                 _logger.LogInformation("Registered a new sensor: {SensorId} ({SensorType}) with wallet: {Wallet}", 
                     sensorId, sensorType, newSensor.WalletAddress);
             }

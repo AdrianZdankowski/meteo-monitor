@@ -2,12 +2,13 @@ using Nethereum.Web3;
 using Nethereum.Web3.Accounts;
 using Microsoft.Extensions.Options;
 using backend.Models;
+using backend.Services.Interfaces;
 using backend.Services.ContractDefinition.SensorContract;
 using backend.Services.ContractDefinition.SensorContract.ContractDefinition;
 
 namespace backend.Services;
 
-public class BlockchainService
+public class BlockchainService : IBlockchainService
 {
     private readonly ILogger<BlockchainService> _logger;
     private readonly BlockchainSettings _settings;

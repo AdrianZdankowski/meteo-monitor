@@ -1,7 +1,8 @@
 using backend.Models;
-using backend.Services;
+using backend.Models.DTOs;
+using backend.Repositories.Interfaces;
+using backend.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Driver;
 
 namespace backend.Controllers;
 
@@ -10,28 +11,27 @@ namespace backend.Controllers;
 public class SensorsController : ControllerBase
 {
     private readonly ILogger<SensorsController> _logger;
-    private readonly MongoDbService _mongoDbService;
-    private readonly BlockchainService _blockchainService;
+    private readonly ISensorRepository _sensorRepository;
+    private readonly IBlockchainService _blockchainService;
 
     public SensorsController(
         ILogger<SensorsController> logger,
-        MongoDbService mongoDbService,
-        BlockchainService blockchainService)
+        ISensorRepository sensorRepository,
+        IBlockchainService blockchainService)
     {
         _logger = logger;
-        _mongoDbService = mongoDbService;
+        _sensorRepository = sensorRepository;
         _blockchainService = blockchainService;
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<SensorWithBalance>>> Get()
+    public async Task<ActionResult<List<SensorWithBalanceDto>>> Get()
     {
         try
         {
-            var collection = _mongoDbService.GetCollection<Sensor>("sensors");
-            var sensors = await collection.Find(_ => true).ToListAsync();
+            var sensors = await _sensorRepository.GetAllAsync();
 
-            var sensorsWithBalances = new List<SensorWithBalance>();
+            var sensorsWithBalances = new List<SensorWithBalanceDto>();
 
             foreach (var sensor in sensors)
             {
@@ -41,7 +41,7 @@ public class SensorsController : ControllerBase
                     balance = await _blockchainService.GetBalanceAsync(sensor.WalletAddress);
                 }
 
-                sensorsWithBalances.Add(new SensorWithBalance
+                sensorsWithBalances.Add(new SensorWithBalanceDto
                 {
                     Id = sensor.Id,
                     SensorId = sensor.SensorId,
@@ -65,9 +65,7 @@ public class SensorsController : ControllerBase
     {
         try
         {
-            var collection = _mongoDbService.GetCollection<Sensor>("sensors");
-            var filter = Builders<Sensor>.Filter.Eq(s => s.SensorId, sensorId);
-            var sensor = await collection.Find(filter).FirstOrDefaultAsync();
+            var sensor = await _sensorRepository.GetBySensorIdAsync(sensorId);
 
             if (sensor == null)
             {
