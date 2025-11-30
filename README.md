@@ -9,25 +9,20 @@ A comprehensive IoT weather monitoring platform with real-time data visualizatio
 
 ## 📋 Table of Contents
 
-- [Overview](#overview)
-- [Features](#features)
-- [Architecture](#architecture)
-- [Technology Stack](#technology-stack)
-- [Prerequisites](#prerequisites)
-- [Getting Started](#getting-started)
-  - [Docker Deployment](#docker-deployment)
-  - [Manual Setup](#manual-setup)
-- [Project Structure](#project-structure)
-- [Services](#services)
+- [Overview](#-overview)
+- [Features](#-features)
+- [Technology Stack](#%EF%B8%8F-technology-stack)
+- [Prerequisites](#-prerequisites)
+- [Getting Started](#-getting-started)
+- [Services](#-services)
   - [Backend API](#backend-api)
   - [Frontend](#frontend)
   - [Sensor Simulator](#sensor-simulator)
   - [Blockchain](#blockchain)
-- [API Reference](#api-reference)
-- [Real-time Communication](#real-time-communication)
-- [Configuration](#configuration)
-- [Development](#development)
-- [License](#license)
+- [API Reference](#-api-reference)
+- [Real-time Communication](#-real-time-communication)
+- [Configuration](#%EF%B8%8F-configuration)
+- [License](#-license)
 
 ## 🔭 Overview
 
@@ -44,30 +39,7 @@ Meteo Monitor is a full-stack IoT weather monitoring solution that simulates mul
 - **📡 SignalR WebSocket**: Real-time push notifications to connected clients
 - **🐳 Docker Ready**: Complete containerized deployment with Docker Compose
 
-## 🏗️ Architecture
-
-```
-┌─────────────────┐     MQTT      ┌─────────────────┐
-│    Sensor       │──────────────▶│   Mosquitto     │
-│   Simulator     │               │   MQTT Broker   │
-│   (Python)      │               └────────┬────────┘
-└─────────────────┘                        │
-                                           │ Subscribe
-                                           ▼
-┌─────────────────┐    REST/WS   ┌─────────────────┐    Ethereum   ┌─────────────────┐
-│    Frontend     │◀────────────▶│    Backend      │◀─────────────▶│     Anvil       │
-│    (React)      │              │    (ASP.NET)    │               │   (Blockchain)  │
-└─────────────────┘              └────────┬────────┘               └─────────────────┘
-                                          │
-                                          │ MongoDB Driver
-                                          ▼
-                                 ┌─────────────────┐
-                                 │    MongoDB      │
-                                 │   (Database)    │
-                                 └─────────────────┘
-```
-
-### Data Flow
+### 🏗️ Data Flow
 
 1. **Sensor Simulator** generates realistic weather data and publishes to MQTT topics
 2. **MQTT Broker (Mosquitto)** receives and routes sensor messages
@@ -147,138 +119,6 @@ docker-compose up -d --build
 - 📡 **MQTT Broker**: localhost:1883 (TCP), localhost:9001 (WebSocket)
 - ⛓️ **Blockchain RPC**: http://localhost:8545
 
-### Manual Setup
-
-#### 1. Start MongoDB
-
-```bash
-# Using Docker
-docker run -d -p 27017:27017 \
-  -e MONGO_INITDB_ROOT_USERNAME=admin \
-  -e MONGO_INITDB_ROOT_PASSWORD=admin123 \
-  mongo:latest
-```
-
-#### 2. Start MQTT Broker
-
-```bash
-# Using Docker
-docker run -d -p 1883:1883 -p 9001:9001 \
-  -v ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf \
-  eclipse-mosquitto:latest
-```
-
-#### 3. Start Blockchain (Anvil)
-
-```bash
-# Using Docker
-docker run -d -p 8545:8545 ghcr.io/foundry-rs/foundry:stable \
-  anvil --host 0.0.0.0 --chain-id 31337 --block-time 1
-
-# Or if Foundry is installed locally
-anvil --host 0.0.0.0 --chain-id 31337 --block-time 1
-```
-
-#### 4. Start Backend
-
-```bash
-cd backend
-dotnet restore
-dotnet run
-```
-
-#### 5. Start Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-#### 6. Start Sensor Simulator
-
-```bash
-cd simulator
-pip install -r requirements.txt
-python simulator.py
-```
-
-## 📁 Project Structure
-
-```
-meteo-monitor/
-├── backend/                    # ASP.NET Core Web API
-│   ├── Controllers/            # REST API endpoints
-│   │   ├── DashboardController.cs
-│   │   ├── ReadingsController.cs
-│   │   └── SensorsController.cs
-│   ├── Hubs/                   # SignalR hubs
-│   │   └── DashboardHub.cs
-│   ├── Models/                 # Data models
-│   │   ├── Sensor.cs
-│   │   ├── SensorReading.cs
-│   │   ├── SensorWithBalance.cs
-│   │   └── *Settings.cs
-│   ├── Services/               # Business logic
-│   │   ├── BlockchainService.cs
-│   │   ├── MongoDbService.cs
-│   │   ├── MqttService.cs
-│   │   └── SensorContract/     # Generated Nethereum code
-│   ├── Program.cs              # Application entry point
-│   ├── appsettings.json        # Configuration
-│   └── Dockerfile
-│
-├── frontend/                   # React + Vite application
-│   ├── src/
-│   │   ├── components/         # React components
-│   │   │   ├── Dashboard.jsx
-│   │   │   ├── DataChart.jsx
-│   │   │   ├── DataTable.jsx
-│   │   │   ├── FilterPanel.jsx
-│   │   │   ├── Navbar.jsx
-│   │   │   └── TokenDashboard.jsx
-│   │   ├── services/           # API & SignalR clients
-│   │   │   ├── api.js
-│   │   │   └── signalr.js
-│   │   ├── styles/             # CSS stylesheets
-│   │   ├── utils/              # Utility functions
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── package.json
-│   ├── vite.config.js
-│   └── Dockerfile
-│
-├── simulator/                  # Python sensor simulator
-│   ├── sensors/                # Sensor implementations
-│   │   ├── __init__.py
-│   │   ├── sensor.py           # Abstract base class
-│   │   ├── temperature_sensor.py
-│   │   ├── humidity_sensor.py
-│   │   ├── pressure_sensor.py
-│   │   └── wind_sensor.py
-│   ├── simulator.py            # Main simulator script
-│   └── requirements.txt
-│
-├── blockchain/                 # Smart contracts
-│   ├── contracts/
-│   │   ├── SensorToken.sol     # ERC-20 token contract
-│   │   └── IERC20.sol          # Interface
-│   ├── scripts/
-│   │   └── compile.js
-│   └── package.json
-│
-├── anvil/                      # Local blockchain setup
-│   ├── Dockerfile
-│   └── entry-point.sh
-│
-├── mosquitto/                  # MQTT broker config
-│   └── config/
-│       └── mosquitto.conf
-│
-├── docker-compose.yaml         # Multi-container orchestration
-└── README.md
-```
-
 ## 🔧 Services
 
 ### Backend API
@@ -324,15 +164,67 @@ Python-based weather station simulator with 16 pre-configured sensors:
 | Pressure | PRESS_001 - PRESS_004 | hPa | ~1000-1030 |
 | Wind | WIND_001 - WIND_004 | m/s | 0 to 30 |
 
-**Usage:**
+#### Installation
 
 ```bash
-# Run continuous simulation
-python simulator.py
-
-# Send single reading
-python simulator.py --single --sensor TEMP_001 --value '{"temperature": 25.5}'
+cd simulator
+pip install -r requirements.txt
 ```
+
+#### Usage
+
+**Continuous Simulation Mode (default):**
+
+Runs all 16 sensors continuously, publishing data at randomized intervals (0.5-1.5 seconds):
+
+```bash
+python simulator.py
+```
+
+Press `Ctrl+C` to stop the simulator.
+
+**Single Reading Mode:**
+
+Send a single reading from a specific sensor and exit:
+
+```bash
+python simulator.py --single --sensor <SENSOR_ID> --value '<JSON_VALUE>'
+```
+
+**Examples:**
+
+```bash
+# Send a temperature reading
+python simulator.py --single --sensor TEMP_001 --value '22.5'
+
+# Send a humidity reading
+python simulator.py --single --sensor HUM_002 --value '65.3'
+
+# Send a pressure reading
+python simulator.py --single --sensor PRESS_001 --value '1013.25'
+
+# Send a wind speed reading
+python simulator.py --single --sensor WIND_003 --value '8.7'
+```
+
+#### Command Line Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `--single` | Enable single-send mode (send one reading and exit) |
+| `--sensor <ID>` | Sensor ID to use (e.g., TEMP_001, HUM_002) |
+| `--value <JSON>` | Value to send as JSON or plain number |
+
+#### Available Sensor IDs
+
+- **Temperature**: `TEMP_001`, `TEMP_002`, `TEMP_003`, `TEMP_004`
+- **Humidity**: `HUM_001`, `HUM_002`, `HUM_003`, `HUM_004`
+- **Pressure**: `PRESS_001`, `PRESS_002`, `PRESS_003`, `PRESS_004`
+- **Wind**: `WIND_001`, `WIND_002`, `WIND_003`, `WIND_004`
+
+#### MQTT Connection
+
+By default, the simulator connects to the MQTT broker at `localhost:1883`. When running with Docker Compose, ensure the MQTT broker container is running before starting the simulator.
 
 ### Blockchain
 
@@ -458,13 +350,6 @@ connection.on('ReceiveSensorUpdate', (sensorId, value, timestamp) => {
 }
 ```
 
-### Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| ASPNETCORE_ENVIRONMENT | Development | Runtime environment |
-| ASPNETCORE_URLS | http://+:8080 | Server binding |
-
 ### MQTT Topic Structure
 
 ```
@@ -491,68 +376,8 @@ sensors/
 }
 ```
 
-## 🧑‍💻 Development
-
-### Running Tests
-
-```bash
-# Backend
-cd backend
-dotnet test
-
-# Frontend
-cd frontend
-npm test
-
-# Linting
-npm run lint
-```
-
-### Building for Production
-
-```bash
-# Backend
-cd backend
-dotnet publish -c Release
-
-# Frontend
-cd frontend
-npm run build
-```
-
-### Compiling Smart Contracts
-
-```bash
-cd blockchain
-npm install
-npm run compile
-```
-
-### Docker Commands
-
-```bash
-# Build all images
-docker-compose build
-
-# Start specific service
-docker-compose up backend
-
-# View logs
-docker-compose logs -f backend
-
-# Stop and remove containers
-docker-compose down
-
-# Remove volumes (database data)
-docker-compose down -v
-```
-
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
-
-<p align="center">
-  Made with ❤️ for IoT and Blockchain enthusiasts
-</p>
